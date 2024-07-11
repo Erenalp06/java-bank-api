@@ -1,0 +1,15 @@
+FROM openjdk:17 as build
+WORKDIR /app
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+RUN ./mvnw dependency:go-offline
+COPY src src
+RUN ./mvnw clean package -DskipTests
+
+FROM openjdk:17
+WORKDIR /app
+COPY --from=build /app/target/bank-api-1.jar /app/bank-api-1.jar
+COPY opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-javaagent:/app/opentelemetry-javaagent.jar", "-Dotel.exporter.otlp.endpoint=http://10.150.238.177:4317", "-Dotel.resource.attributes=service.name=java-bank-api", "-Dotel.exporter.otlp.protocol=grpc", "-jar", "bank-api-1.jar"]

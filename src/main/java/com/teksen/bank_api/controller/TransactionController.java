@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.teksen.bank_api.DTOs.AccountDetails;
 import com.teksen.bank_api.DTOs.TransactionDTO;
 import com.teksen.bank_api.DTOs.TransactionRequest;
@@ -18,25 +20,46 @@ import com.teksen.bank_api.entity.Transaction;
 import com.teksen.bank_api.service.AccountService;
 import com.teksen.bank_api.service.TransactionService;
 
+import io.opentelemetry.api.trace.Span;
+
 @RestController
 @RequestMapping("/api/v1/transactions")
 public class TransactionController {
 
     private final TransactionService transactionService;
     private final AccountService accountService;
+    private final ObjectMapper objectMapper;   
 
-    public TransactionController(TransactionService transactionService, AccountService accountService) {
+
+    public TransactionController(TransactionService transactionService, AccountService accountService, ObjectMapper objectMapper) {
         this.transactionService = transactionService;
         this.accountService = accountService;
+        this.objectMapper = objectMapper;
     }
+    
     
 
     @PostMapping("/transfer")
     public ResponseEntity<TransactionDTO> transferMoney(@RequestBody TransactionRequest request) throws Exception{
+
+    
+
     Transaction transaction = transactionService.createTransaction(request.getSourceAccountNumber(), request.getDestinationAccountNumber(), request.getAmount());
     AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
     AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
     TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);
+
+    Span currentSpan = Span.current();
+        if (currentSpan != null) {
+            try {
+                String transactionJson = objectMapper.writeValueAsString(request);
+                String transactionDTOJson = objectMapper.writeValueAsString(transactionDTO);
+                currentSpan.setAttribute("http.request.body", transactionJson);
+                currentSpan.setAttribute("http.response.body", transactionDTOJson);
+            } catch (JsonProcessingException e) {
+                currentSpan.setAttribute("http.request.body.error or http.response.body error", "Failed to convert user to JSON");
+            }
+        }
 
     return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
 }

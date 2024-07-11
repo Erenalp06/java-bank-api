@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.teksen</groupId>
 	<artifactId>bank-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1</version>
 	<name>bank-api</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -55,6 +55,29 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+
+		<dependency>
+		<groupId>io.opentelemetry</groupId>
+		<artifactId>opentelemetry-api</artifactId>
+		<version>1.40.0</version>
+	</dependency>
+	<dependency>
+		<groupId>io.opentelemetry</groupId>
+		<artifactId>opentelemetry-sdk</artifactId>
+		<version>1.40.0</version>
+	</dependency>
+	<dependency>
+		<groupId>io.opentelemetry</groupId>
+		<artifactId>opentelemetry-extension-annotations</artifactId>
+		<version>1.18.0</version>
+	</dependency>
+
+	<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.17.2</version>
+</dependency>
 	</dependencies>
 
 	<build>
