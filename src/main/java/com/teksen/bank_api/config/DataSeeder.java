@@ -1,6 +1,9 @@
 package com.teksen.bank_api.config;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -28,43 +31,43 @@ public class DataSeeder {
     }
 
     @Bean
-    CommandLineRunner initDatabase(){
+    CommandLineRunner initDatabase() {
         return args -> {
-            User user1 = new User();
-            user1.setName("John Doe");
-            user1.setEmail("john.doe@example.com");
-            userRepository.save(user1);
+            List<User> users = new ArrayList<>();
+            List<Bank> banks = new ArrayList<>();
 
-            User user2 = new User();
-            user2.setName("Jane Roe");
-            user2.setEmail("jane.roe@example.com");
-            userRepository.save(user2);
-            
-            Bank bank1 = new Bank();
-            bank1.setName("Bank A");
-            bank1.setAddress("123 Bank St.");
-            bankRepository.save(bank1);
-
-            Bank bank2 = new Bank();
-            bank2.setName("Bank B");
-            bank2.setAddress("456 Bank St.");
-            bankRepository.save(bank2);
-            
-            Account account1 = new Account();
-            account1.setAccountNumber("123456789");
-            account1.setBalance(new BigDecimal("1000.00"));
-            account1.setUser(user1);
-            account1.setBank(bank1);
-            accountRepository.save(account1);
-
-            Account account2 = new Account();
-            account2.setAccountNumber("987654321");
-            account2.setBalance(new BigDecimal("1500.00"));
-            account2.setUser(user2);
-            account2.setBank(bank2);
-            accountRepository.save(account2);
-        };
+            String[] names = {"Alice Johnson", "Bob Smith", "Cathy Brown", "David Wilson", "Emma Moore",
+                          "Frank White", "Grace Lee", "Henry Garcia", "Isabella Martinez", "James Taylor"};
+            for (int i = 0; i < names.length; i++) {
+            User user = new User();
+            user.setName(names[i]);                            
+            String email = names[i].toLowerCase().replace(" ", "-") + "@gmail.com";
+            user.setEmail(email);
+            users.add(userRepository.save(user));
         }
+
+            String[] bankNames = {"Union Bank", "City Bank", "Trust Bank", "Heritage Bank", "Metro Bank"};
+            for (int i = 0; i < bankNames.length; i++) {
+                Bank bank = new Bank();
+                bank.setName(bankNames[i]);
+                bank.setAddress(bankNames[i] + " Financial Plaza");
+                banks.add(bankRepository.save(bank));
+            }
+
+            Random random = new Random();
+            for (User user : users) {
+                int numAccounts = random.nextInt(4);
+                for (int j = 0; j < numAccounts; j++) {
+                    Account account = new Account();
+                    account.setAccountNumber(String.valueOf(random.nextInt(1000000000) + 1000000000));
+                    account.setBalance(BigDecimal.valueOf(random.nextInt(10000) + 1000));
+                    account.setUser(user);
+                    account.setBank(banks.get(random.nextInt(banks.size())));
+                    accountRepository.save(account);
+                }
+            }
+        };
+    }
     }
 
 
