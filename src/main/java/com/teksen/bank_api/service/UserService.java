@@ -1,11 +1,11 @@
 package com.teksen.bank_api.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.teksen.bank_api.entity.User;
+import com.teksen.bank_api.exception.custom.UserNotFoundException;
 import com.teksen.bank_api.repository.UserRepository;
 
 @Service
@@ -23,7 +23,7 @@ public class UserService {
 
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
     public List<User> getAllUsers() {

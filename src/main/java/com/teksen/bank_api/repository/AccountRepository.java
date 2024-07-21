@@ -8,4 +8,5 @@ import com.teksen.bank_api.entity.Account;
 
 public interface AccountRepository extends JpaRepository<Account, Long>{
     Optional<Account> findByAccountNumber(String accountNumber);
+    Optional<Account> findByAccountNumberAndUserId(String accountNumber, Long userId);
 }

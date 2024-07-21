@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.teksen.bank_api.entity.Bank;
+import com.teksen.bank_api.exception.custom.BankNotFoundException;
 import com.teksen.bank_api.repository.BankRepository;
 
 @Service
@@ -23,7 +24,7 @@ public class BankService {
 
     public Bank getBankById(Long id) {
         return bankRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bank not found with id: " + id));
+                .orElseThrow(() -> new BankNotFoundException("Bank not found with id: " + id));
     }
 
     public List<Bank> getAllBanks() {

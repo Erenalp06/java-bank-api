@@ -56,13 +56,15 @@ public class DataSeeder {
 
             Random random = new Random();
             for (User user : users) {
-                int numAccounts = random.nextInt(4);
+                int numAccounts = random.nextInt(5);
                 for (int j = 0; j < numAccounts; j++) {
                     Account account = new Account();
                     account.setAccountNumber(String.valueOf(random.nextInt(1000000000) + 1000000000));
                     account.setBalance(BigDecimal.valueOf(random.nextInt(10000) + 1000));
                     account.setUser(user);
                     account.setBank(banks.get(random.nextInt(banks.size())));
+                    account.setActive(random.nextBoolean()); 
+                    account.setCreationDate();                   
                     accountRepository.save(account);
                 }
             }

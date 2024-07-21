@@ -34,3 +34,77 @@ class BankApiUser(HttpUser):
         }
 
         self.client.post("/api/v1/transactions/transfer", json=transaction_request)
+
+    @task
+    def deposit(self):
+        account = random.choice(account_numbers)
+        amount = random.uniform(50, 100)
+
+        transaction_request = {
+            "destinationAccountNumber": account,
+            "amount": amount
+        }
+
+        self.client.post("/api/v1/transactions/deposit", json=transaction_request)
+
+    @task
+    def withdraw(self):
+        account = random.choice(account_numbers)
+        amount = random.uniform(50, 100)
+
+        transaction_request = {
+            "sourceAccountNumber": account,
+            "amount": amount
+        }
+
+        self.client.post("/api/v1/transactions/withdraw", json=transaction_request)
+
+    @task
+    def payment(self):
+        account = random.choice(account_numbers)
+        amount = random.uniform(20, 80)
+        payee = "Test Payee"
+
+        transaction_request = {
+            "sourceAccountNumber": account,
+            "amount": amount,
+            "payee": payee
+        }
+
+        self.client.post("/api/v1/transactions/payment", json=transaction_request)
+
+    @task
+    def refund(self):
+        account = random.choice(account_numbers)
+        amount = random.uniform(20, 80)
+
+        transaction_request = {
+            "destinationAccountNumber": account,
+            "amount": amount
+        }
+
+        self.client.post("/api/v1/transactions/refund", json=transaction_request)
+
+    @task
+    def fee(self):
+        account = random.choice(account_numbers)
+        amount = random.uniform(1, 10)
+
+        transaction_request = {
+            "sourceAccountNumber": account,
+            "amount": amount
+        }
+
+        self.client.post("/api/v1/transactions/fee", json=transaction_request)
+
+    @task
+    def interest(self):
+        account = random.choice(account_numbers)
+        amount = random.uniform(1, 10)
+
+        transaction_request = {
+            "destinationAccountNumber": account,
+            "amount": amount
+        }
+
+        self.client.post("/api/v1/transactions/interest", json=transaction_request)

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import com.teksen.bank_api.entity.Transaction;
+import com.teksen.bank_api.entity.TransactionType;
 
 public class TransactionDTO {
     private Long id;
@@ -11,6 +12,7 @@ public class TransactionDTO {
     private Date transactionDate;
     private AccountDetails sourceAccount;
     private AccountDetails destinationAccount;
+    private TransactionType transactionType;
 
 
     public TransactionDTO() {
@@ -23,16 +25,18 @@ public class TransactionDTO {
         dto.setTransactionDate(transaction.getTransactionDate());
         dto.setSourceAccount(sourceDetails);
         dto.setDestinationAccount(destinationDetails);
+        dto.setTransactionType(transaction.getTransactionType());
         return dto;
     }
 
 
-    public TransactionDTO(Long id, BigDecimal amount, Date transactionDate, AccountDetails sourceAccount, AccountDetails destinationAccount) {
+    public TransactionDTO(Long id, BigDecimal amount, Date transactionDate, AccountDetails sourceAccount, AccountDetails destinationAccount, TransactionType transactionType) {
         this.id = id;
         this.amount = amount;
         this.transactionDate = transactionDate;
         this.sourceAccount = sourceAccount;
         this.destinationAccount = destinationAccount;
+        this.transactionType = transactionType;
     }
 
     public Long getId() {
@@ -99,6 +103,16 @@ public class TransactionDTO {
         setDestinationAccount(destinationAccount);
         return this;
     }    
+
+
+    public TransactionType getTransactionType() {
+        return this.transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }
+
 
     @Override
     public String toString() {

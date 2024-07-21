@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,22 +24,26 @@ public class Transaction {
     private BigDecimal amount;
     private Date transactionDate;
 
+    @Enumerated(EnumType.STRING)
+    private TransactionType transactionType;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_account_id", nullable = false)
+    @JoinColumn(name = "source_account_id", nullable = true)
     private Account sourceAccount;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destination_account_id", nullable = false)
+    @JoinColumn(name = "destination_account_id", nullable = true)
     private Account destinationAccount;
 
 
     public Transaction() {
     }
 
-    public Transaction(Long id, BigDecimal amount, Date transactionDate, Account sourceAccount, Account destinationAccount) {
+    public Transaction(Long id, BigDecimal amount, Date transactionDate, TransactionType transactionType, Account sourceAccount, Account destinationAccount) {
         this.id = id;
         this.amount = amount;
         this.transactionDate = transactionDate;
+        this.transactionType = transactionType;
         this.sourceAccount = sourceAccount;
         this.destinationAccount = destinationAccount;
     }
@@ -107,6 +113,16 @@ public class Transaction {
         return this;
     }  
 
+
+
+    public TransactionType getTransactionType() {
+        return this.transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }   
+
     
     @Override
     public String toString() {
@@ -114,10 +130,12 @@ public class Transaction {
             " id='" + getId() + "'" +
             ", amount='" + getAmount() + "'" +
             ", transactionDate='" + getTransactionDate() + "'" +
+            ", transactionType='" + getTransactionType() + "'" +
             ", sourceAccount='" + getSourceAccount() + "'" +
             ", destinationAccount='" + getDestinationAccount() + "'" +
             "}";
     }
+    
     
 
 

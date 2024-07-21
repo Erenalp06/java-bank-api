@@ -1,9 +1,7 @@
 package com.teksen.bank_api.service;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.teksen.bank_api.DTOs.AccountDetails;
@@ -12,6 +10,8 @@ import com.teksen.bank_api.DTOs.UserDetails;
 import com.teksen.bank_api.entity.Account;
 import com.teksen.bank_api.entity.Bank;
 import com.teksen.bank_api.entity.User;
+import com.teksen.bank_api.exception.custom.AccountInactiveException;
+import com.teksen.bank_api.exception.custom.AccountNotFoundException;
 import com.teksen.bank_api.repository.AccountRepository;
 
 @Service
@@ -31,7 +31,7 @@ public class AccountService {
 
     public Account getAccountById(Long id) {
         return accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + id, null));
     }
 
     public List<Account> getAllAccounts() {
@@ -43,9 +43,14 @@ public class AccountService {
     }
 
     public Account findAccountByNumber(String accountNumber) {
-        return accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new RuntimeException("Account not found with account number: " + accountNumber));
-    }
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+        .orElseThrow(() -> new AccountNotFoundException("Account not found with account number: " + accountNumber, null) );
+
+        if (!account.isActive()) {
+            throw new AccountInactiveException("Account is inactive with account number: " + accountNumber, mapToAccountDetails(account));
+        }
+        return account;        
+    }    
 
      public AccountDetails mapToAccountDetails(Account account) {
         AccountDetails details = new AccountDetails();

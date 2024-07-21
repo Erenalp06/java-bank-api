@@ -42,28 +42,82 @@ public class TransactionController {
     @PostMapping("/transfer")
     public ResponseEntity<TransactionDTO> transferMoney(@RequestBody TransactionRequest request) throws Exception{
 
-    
-
     Transaction transaction = transactionService.createTransaction(request.getSourceAccountNumber(), request.getDestinationAccountNumber(), request.getAmount());
     AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
     AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);    
 
-    Span currentSpan = Span.current();
-        if (currentSpan != null) {
-            try {
-                String transactionJson = objectMapper.writeValueAsString(request);
-                String transactionDTOJson = objectMapper.writeValueAsString(transactionDTO);
-                currentSpan.setAttribute("http.request.body", transactionJson);
-                currentSpan.setAttribute("http.response.body", transactionDTOJson);
-            } catch (JsonProcessingException e) {
-                currentSpan.setAttribute("http.request.body.error or http.response.body error", "Failed to convert user to JSON");
-            }
-        }
+    addSpanAttributes(request, transactionDTO);
 
     return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
 }
 
+@PostMapping("/deposit")
+public ResponseEntity<TransactionDTO> depositMoney(@RequestBody TransactionRequest request) throws Exception{
+
+    Transaction transaction = transactionService.deposit(request.getDestinationAccountNumber(), request.getAmount());
+    AccountDetails accountDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, accountDetails);    
+
+    addSpanAttributes(request, transactionDTO);
+    
+    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+}
+
+@PostMapping("/withdraw")
+public ResponseEntity<TransactionDTO> withdrawMoney(@RequestBody TransactionRequest request) throws Exception{
+    Transaction transaction = transactionService.withdraw(request.getSourceAccountNumber(), request.getAmount());
+    AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
+
+    addSpanAttributes(request, transactionDTO);
+
+    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+}
+
+@PostMapping("/payment")
+    public ResponseEntity<TransactionDTO> payment(@RequestBody TransactionRequest request) throws Exception {
+        Transaction transaction = transactionService.payment(request.getSourceAccountNumber(), request.getAmount());
+        AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
+
+        addSpanAttributes(request, transactionDTO);
+
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+    }
+
+@PostMapping("/refund")
+public ResponseEntity<TransactionDTO> refund(@RequestBody TransactionRequest request) throws Exception {
+    Transaction transaction = transactionService.refund(request.getDestinationAccountNumber(), request.getAmount());
+    AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, destinationDetails);
+
+    addSpanAttributes(request, transactionDTO);
+
+    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+}
+
+@PostMapping("/fee")
+public ResponseEntity<TransactionDTO> fee(@RequestBody TransactionRequest request) throws Exception {
+    Transaction transaction = transactionService.fee(request.getSourceAccountNumber(), request.getAmount());
+    AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
+
+    addSpanAttributes(request, transactionDTO);
+
+    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+}
+
+@PostMapping("/interest")
+public ResponseEntity<TransactionDTO> interest(@RequestBody TransactionRequest request) throws Exception {
+    Transaction transaction = transactionService.interest(request.getDestinationAccountNumber(), request.getAmount());
+    AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, destinationDetails);
+
+    addSpanAttributes(request, transactionDTO);
+
+    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+}
 
 @GetMapping("/")
 public ResponseEntity<List<TransactionDTO>> getAllTransactions() {
@@ -74,6 +128,20 @@ public ResponseEntity<List<TransactionDTO>> getAllTransactions() {
         return TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);
     }).collect(Collectors.toList());
     return ResponseEntity.ok(transactionDTOs);
+}
+
+private void addSpanAttributes(TransactionRequest request, TransactionDTO transactionDTO) {
+    Span currentSpan = Span.current();
+    if (currentSpan != null) {
+        try {
+            String transactionJson = objectMapper.writeValueAsString(request);
+            String transactionDTOJson = objectMapper.writeValueAsString(transactionDTO);
+            currentSpan.setAttribute("http.request.body", transactionJson);
+            currentSpan.setAttribute("http.response.body", transactionDTOJson);
+        } catch (JsonProcessingException e) {
+            currentSpan.setAttribute("http.request.body.error or http.response.body.error", "Failed to convert to JSON");
+        }
+    }
 }
 
     
