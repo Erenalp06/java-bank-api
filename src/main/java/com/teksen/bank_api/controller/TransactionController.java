@@ -1,5 +1,7 @@
 package com.teksen.bank_api.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +23,7 @@ import com.teksen.bank_api.service.AccountService;
 import com.teksen.bank_api.service.TransactionService;
 
 import io.opentelemetry.api.trace.Span;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
@@ -53,7 +56,8 @@ public class TransactionController {
 }
 
 @PostMapping("/deposit")
-public ResponseEntity<TransactionDTO> depositMoney(@RequestBody TransactionRequest request) throws Exception{
+public ResponseEntity<TransactionDTO> depositMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception{
+    addAuthorizationAttribute(httpRequest);
 
     Transaction transaction = transactionService.deposit(request.getDestinationAccountNumber(), request.getAmount());
     AccountDetails accountDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
@@ -65,7 +69,8 @@ public ResponseEntity<TransactionDTO> depositMoney(@RequestBody TransactionReque
 }
 
 @PostMapping("/withdraw")
-public ResponseEntity<TransactionDTO> withdrawMoney(@RequestBody TransactionRequest request) throws Exception{
+public ResponseEntity<TransactionDTO> withdrawMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception{
+    addAuthorizationAttribute(httpRequest);
     Transaction transaction = transactionService.withdraw(request.getSourceAccountNumber(), request.getAmount());
     AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
     TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
@@ -140,6 +145,26 @@ private void addSpanAttributes(TransactionRequest request, TransactionDTO transa
             currentSpan.setAttribute("http.response.body", transactionDTOJson);
         } catch (JsonProcessingException e) {
             currentSpan.setAttribute("http.request.body.error or http.response.body.error", "Failed to convert to JSON");
+        }
+    }
+}
+
+private void addAuthorizationAttribute(HttpServletRequest request) {
+    Span currentSpan = Span.current();
+    if (currentSpan != null) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            try {
+                // Basic kimlik doğrulamasını çözme
+                String base64Credentials = authHeader.substring("Basic".length()).trim();
+                byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+                String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+                // credentials = username:password
+                String username = credentials.split(":", 2)[0];
+                currentSpan.setAttribute("http.auth.user", username);
+            } catch (IllegalArgumentException e) {
+                currentSpan.setAttribute("http.auth.error", "Failed to decode credentials");
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ import random
 from locust import HttpUser, task, between
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.orm import sessionmaker
+import base64
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5455/postgres"
 
@@ -21,6 +22,15 @@ with session.connection() as conn:
 class BankApiUser(HttpUser):
     wait_time = between(1, 5)
 
+
+    def on_start(self):
+        self.auth_header = self.create_auth_header('erenalp', 'test123')
+
+    def create_auth_header(self, username, password):
+        user_pass = f"{username}:{password}"
+        encoded_u_p = base64.b64encode(user_pass.encode()).decode()
+        return {"Authorization": f"Basic {encoded_u_p}"}
+
     @task
     def transfer(self):
         source_account = random.choice(account_numbers)
@@ -33,7 +43,7 @@ class BankApiUser(HttpUser):
             "amount": amount
         }
 
-        self.client.post("/api/v1/transactions/transfer", json=transaction_request)
+        self.client.post("/api/v1/transactions/transfer", json=transaction_request, headers=self.auth_header)
 
     @task
     def deposit(self):
@@ -45,7 +55,7 @@ class BankApiUser(HttpUser):
             "amount": amount
         }
 
-        self.client.post("/api/v1/transactions/deposit", json=transaction_request)
+        self.client.post("/api/v1/transactions/deposit", json=transaction_request, headers=self.auth_header)
 
     @task
     def withdraw(self):
@@ -57,7 +67,7 @@ class BankApiUser(HttpUser):
             "amount": amount
         }
 
-        self.client.post("/api/v1/transactions/withdraw", json=transaction_request)
+        self.client.post("/api/v1/transactions/withdraw", json=transaction_request, headers=self.auth_header)
 
     @task
     def payment(self):
@@ -71,7 +81,7 @@ class BankApiUser(HttpUser):
             "payee": payee
         }
 
-        self.client.post("/api/v1/transactions/payment", json=transaction_request)
+        self.client.post("/api/v1/transactions/payment", json=transaction_request, headers=self.auth_header)
 
     @task
     def refund(self):
@@ -83,7 +93,7 @@ class BankApiUser(HttpUser):
             "amount": amount
         }
 
-        self.client.post("/api/v1/transactions/refund", json=transaction_request)
+        self.client.post("/api/v1/transactions/refund", json=transaction_request, headers=self.auth_header)
 
     @task
     def fee(self):
@@ -95,7 +105,7 @@ class BankApiUser(HttpUser):
             "amount": amount
         }
 
-        self.client.post("/api/v1/transactions/fee", json=transaction_request)
+        self.client.post("/api/v1/transactions/fee", json=transaction_request, headers=self.auth_header)
 
     @task
     def interest(self):
@@ -107,4 +117,4 @@ class BankApiUser(HttpUser):
             "amount": amount
         }
 
-        self.client.post("/api/v1/transactions/interest", json=transaction_request)
+        self.client.post("/api/v1/transactions/interest", json=transaction_request, headers=self.auth_header)
