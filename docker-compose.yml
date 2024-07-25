@@ -7,9 +7,13 @@ services:
     ports:
       - 8095:8095
     environment:
-    - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres/postgres
-    - SPRING_DATASOURCE_USERNAME=postgres
-    - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres/postgres
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/opentelemetry-javaagent.jar
+      - OTEL_JAVAAGENT_CONFIGURATION_FILE=/app/dev.properties
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
     depends_on:
       - postgres
 

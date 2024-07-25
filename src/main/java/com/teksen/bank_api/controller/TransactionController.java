@@ -5,6 +5,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +30,8 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/api/v1/transactions")
 public class TransactionController {
+
+    private static final Logger logger = LoggerFactory.getLogger(TransactionController.class);
 
     private final TransactionService transactionService;
     private final AccountService accountService;
@@ -59,9 +63,13 @@ public class TransactionController {
 public ResponseEntity<TransactionDTO> depositMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception{
     addAuthorizationAttribute(httpRequest);
 
+    logger.info("Deposit request received for account number: {}", request.getDestinationAccountNumber());
+
     Transaction transaction = transactionService.deposit(request.getDestinationAccountNumber(), request.getAmount());
     AccountDetails accountDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, accountDetails);    
+    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, accountDetails);   
+    
+    logger.info("Transaction completed: {}", transactionDTO);
 
     addSpanAttributes(request, transactionDTO);
     

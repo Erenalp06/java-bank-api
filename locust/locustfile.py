@@ -24,7 +24,7 @@ class BankApiUser(HttpUser):
 
 
     def on_start(self):
-        self.auth_header = self.create_auth_header('erenalp', 'test123')
+        self.auth_header = self.create_auth_header('selin', 'test123')
 
     def create_auth_header(self, username, password):
         user_pass = f"{username}:{password}"
