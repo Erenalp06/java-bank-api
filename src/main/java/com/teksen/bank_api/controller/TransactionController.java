@@ -37,147 +37,167 @@ public class TransactionController {
     private final AccountService accountService;
     private final ObjectMapper objectMapper;   
 
-
     public TransactionController(TransactionService transactionService, AccountService accountService, ObjectMapper objectMapper) {
         this.transactionService = transactionService;
         this.accountService = accountService;
         this.objectMapper = objectMapper;
     }
-    
-    
 
     @PostMapping("/transfer")
-    public ResponseEntity<TransactionDTO> transferMoney(@RequestBody TransactionRequest request) throws Exception{
+    public ResponseEntity<TransactionDTO> transferMoney(@RequestBody TransactionRequest request) throws Exception {
+        logger.info("Transfer request received for source account: {} to destination account: {}", request.getSourceAccountNumber(), request.getDestinationAccountNumber());
 
-    Transaction transaction = transactionService.createTransaction(request.getSourceAccountNumber(), request.getDestinationAccountNumber(), request.getAmount());
-    AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
-    AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);    
+        Transaction transaction = transactionService.createTransaction(request.getSourceAccountNumber(), request.getDestinationAccountNumber(), request.getAmount());
+        AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+        AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);
 
-    addSpanAttributes(request, transactionDTO);
+        addSpanAttributes(request, transactionDTO);
 
-    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
-}
+        logger.info("Transaction completed: {}", transactionDTO);
 
-@PostMapping("/deposit")
-public ResponseEntity<TransactionDTO> depositMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception{
-    addAuthorizationAttribute(httpRequest);
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+    }
 
-    logger.info("Deposit request received for account number: {}", request.getDestinationAccountNumber());
+    @PostMapping("/deposit")
+    public ResponseEntity<TransactionDTO> depositMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception {
+        addAuthorizationAttribute(httpRequest);
+        logger.info("Deposit request received for account number: {}", request.getDestinationAccountNumber());
 
-    Transaction transaction = transactionService.deposit(request.getDestinationAccountNumber(), request.getAmount());
-    AccountDetails accountDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, accountDetails);   
-    
-    logger.info("Transaction completed: {}", transactionDTO);
+        Transaction transaction = transactionService.deposit(request.getDestinationAccountNumber(), request.getAmount());
+        AccountDetails accountDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, accountDetails);
 
-    addSpanAttributes(request, transactionDTO);
-    
-    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
-}
+        addSpanAttributes(request, transactionDTO);
 
-@PostMapping("/withdraw")
-public ResponseEntity<TransactionDTO> withdrawMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception{
-    addAuthorizationAttribute(httpRequest);
-    Transaction transaction = transactionService.withdraw(request.getSourceAccountNumber(), request.getAmount());
-    AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
+        logger.info("Transaction completed: {}", transactionDTO);
 
-    addSpanAttributes(request, transactionDTO);
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+    }
 
-    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
-}
+    @PostMapping("/withdraw")
+    public ResponseEntity<TransactionDTO> withdrawMoney(HttpServletRequest httpRequest, @RequestBody TransactionRequest request) throws Exception {
+        addAuthorizationAttribute(httpRequest);
+        logger.info("Withdraw request received for account number: {}", request.getSourceAccountNumber());
 
-@PostMapping("/payment")
+        Transaction transaction = transactionService.withdraw(request.getSourceAccountNumber(), request.getAmount());
+        AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
+
+        addSpanAttributes(request, transactionDTO);
+
+        logger.info("Transaction completed: {}", transactionDTO);
+
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/payment")
     public ResponseEntity<TransactionDTO> payment(@RequestBody TransactionRequest request) throws Exception {
+        logger.info("Payment request received for account number: {}", request.getSourceAccountNumber());
+
         Transaction transaction = transactionService.payment(request.getSourceAccountNumber(), request.getAmount());
         AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
         TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
 
         addSpanAttributes(request, transactionDTO);
 
+        logger.info("Transaction completed: {}", transactionDTO);
+
         return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
     }
 
-@PostMapping("/refund")
-public ResponseEntity<TransactionDTO> refund(@RequestBody TransactionRequest request) throws Exception {
-    Transaction transaction = transactionService.refund(request.getDestinationAccountNumber(), request.getAmount());
-    AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, destinationDetails);
+    @PostMapping("/refund")
+    public ResponseEntity<TransactionDTO> refund(@RequestBody TransactionRequest request) throws Exception {
+        logger.info("Refund request received for account number: {}", request.getDestinationAccountNumber());
 
-    addSpanAttributes(request, transactionDTO);
-
-    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
-}
-
-@PostMapping("/fee")
-public ResponseEntity<TransactionDTO> fee(@RequestBody TransactionRequest request) throws Exception {
-    Transaction transaction = transactionService.fee(request.getSourceAccountNumber(), request.getAmount());
-    AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
-
-    addSpanAttributes(request, transactionDTO);
-
-    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
-}
-
-@PostMapping("/interest")
-public ResponseEntity<TransactionDTO> interest(@RequestBody TransactionRequest request) throws Exception {
-    Transaction transaction = transactionService.interest(request.getDestinationAccountNumber(), request.getAmount());
-    AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-    TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, destinationDetails);
-
-    addSpanAttributes(request, transactionDTO);
-
-    return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
-}
-
-@GetMapping("/")
-public ResponseEntity<List<TransactionDTO>> getAllTransactions() {
-    List<Transaction> transactions = transactionService.getAllTransactions();
-    List<TransactionDTO> transactionDTOs = transactions.stream().map(transaction -> {
-        AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+        Transaction transaction = transactionService.refund(request.getDestinationAccountNumber(), request.getAmount());
         AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
-        return TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);
-    }).collect(Collectors.toList());
-    return ResponseEntity.ok(transactionDTOs);
-}
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, destinationDetails);
 
-private void addSpanAttributes(TransactionRequest request, TransactionDTO transactionDTO) {
-    Span currentSpan = Span.current();
-    if (currentSpan != null) {
-        try {
-            String transactionJson = objectMapper.writeValueAsString(request);
-            String transactionDTOJson = objectMapper.writeValueAsString(transactionDTO);
-            currentSpan.setAttribute("http.request.body", transactionJson);
-            currentSpan.setAttribute("http.response.body", transactionDTOJson);
-        } catch (JsonProcessingException e) {
-            currentSpan.setAttribute("http.request.body.error or http.response.body.error", "Failed to convert to JSON");
-        }
+        addSpanAttributes(request, transactionDTO);
+
+        logger.info("Transaction completed: {}", transactionDTO);
+
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
     }
-}
 
-private void addAuthorizationAttribute(HttpServletRequest request) {
-    Span currentSpan = Span.current();
-    if (currentSpan != null) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Basic ")) {
+    @PostMapping("/fee")
+    public ResponseEntity<TransactionDTO> fee(@RequestBody TransactionRequest request) throws Exception {
+        logger.info("Fee request received for account number: {}", request.getSourceAccountNumber());
+
+        Transaction transaction = transactionService.fee(request.getSourceAccountNumber(), request.getAmount());
+        AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, sourceDetails, null);
+
+        addSpanAttributes(request, transactionDTO);
+
+        logger.info("Transaction completed: {}", transactionDTO);
+
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/interest")
+    public ResponseEntity<TransactionDTO> interest(@RequestBody TransactionRequest request) throws Exception {
+        logger.info("Interest request received for account number: {}", request.getDestinationAccountNumber());
+
+        Transaction transaction = transactionService.interest(request.getDestinationAccountNumber(), request.getAmount());
+        AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+        TransactionDTO transactionDTO = TransactionDTO.toDTO(transaction, null, destinationDetails);
+
+        addSpanAttributes(request, transactionDTO);
+
+        logger.info("Transaction completed: {}", transactionDTO);
+
+        return new ResponseEntity<>(transactionDTO, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<List<TransactionDTO>> getAllTransactions() {
+        logger.info("Fetching all transactions");
+
+        List<Transaction> transactions = transactionService.getAllTransactions();
+        List<TransactionDTO> transactionDTOs = transactions.stream().map(transaction -> {
+            AccountDetails sourceDetails = accountService.mapToAccountDetails(transaction.getSourceAccount());
+            AccountDetails destinationDetails = accountService.mapToAccountDetails(transaction.getDestinationAccount());
+            return TransactionDTO.toDTO(transaction, sourceDetails, destinationDetails);
+        }).collect(Collectors.toList());
+
+        logger.info("Found {} transactions", transactionDTOs.size());
+
+        return ResponseEntity.ok(transactionDTOs);
+    }
+
+    private void addSpanAttributes(TransactionRequest request, TransactionDTO transactionDTO) {
+        Span currentSpan = Span.current();
+        if (currentSpan != null) {
             try {
-                // Basic kimlik doğrulamasını çözme
-                String base64Credentials = authHeader.substring("Basic".length()).trim();
-                byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-                String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-                // credentials = username:password
-                String username = credentials.split(":", 2)[0];
-                currentSpan.setAttribute("http.auth.user", username);
-            } catch (IllegalArgumentException e) {
-                currentSpan.setAttribute("http.auth.error", "Failed to decode credentials");
+                String transactionJson = objectMapper.writeValueAsString(request);
+                String transactionDTOJson = objectMapper.writeValueAsString(transactionDTO);
+                currentSpan.setAttribute("http.request.body", transactionJson);
+                currentSpan.setAttribute("http.response.body", transactionDTOJson);
+            } catch (JsonProcessingException e) {
+                currentSpan.setAttribute("http.request.body.error or http.response.body.error", "Failed to convert to JSON");
             }
         }
     }
-}
 
-    
-
-
+    private void addAuthorizationAttribute(HttpServletRequest request) {
+        Span currentSpan = Span.current();
+        if (currentSpan != null) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Basic ")) {
+                try {
+                    // Basic kimlik doğrulamasını çözme
+                    String base64Credentials = authHeader.substring("Basic".length()).trim();
+                    byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+                    String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+                    // credentials = username:password
+                    String username = credentials.split(":", 2)[0];
+                    currentSpan.setAttribute("http.auth.user", username);
+                } catch (IllegalArgumentException e) {
+                    currentSpan.setAttribute("http.auth.error", "Failed to decode credentials");
+                }
+            }
+        }
+    }
 }

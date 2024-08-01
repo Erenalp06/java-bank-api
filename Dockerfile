@@ -10,7 +10,7 @@ RUN ./mvnw clean package -DskipTests
 FROM openjdk:17
 WORKDIR /app
 COPY --from=build /app/target/bank-api-1.jar /app/bank-api-1.jar
-COPY opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+COPY opentelemetry-javaagent-2.jar /app/opentelemetry-javaagent-2.jar
 COPY dev.properties /app/dev.properties
 EXPOSE 8080
-ENTRYPOINT ["java", "-javaagent:/app/opentelemetry-javaagent.jar", "-Dotel.javaagent.configuration.file=/app/dev.properties", "-Dotel.resource.attributes=service.name=java-bank-api", "-jar", "bank-api-1.jar"]
+ENTRYPOINT ["java", "-javaagent:/app/opentelemetry-javaagent-2.jar", "-Dotel.javaagent.configuration.file=/app/dev.properties", "-Dotel.resource.attributes=service.name=java-bank-api", "-jar", "bank-api-1.jar"]

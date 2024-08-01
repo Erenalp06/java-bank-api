@@ -3,6 +3,7 @@ from locust import HttpUser, task, between
 from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.orm import sessionmaker
 import base64
+import time
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5455/postgres"
 
@@ -37,6 +38,8 @@ class BankApiUser(HttpUser):
         destination_account = random.choice([acc for acc in account_numbers if acc != source_account])
         amount = random.uniform(100, 150)
 
+        
+
         transaction_request = {
             "sourceAccountNumber": source_account,
             "destinationAccountNumber": destination_account,
@@ -50,6 +53,8 @@ class BankApiUser(HttpUser):
         account = random.choice(account_numbers)
         amount = random.uniform(50, 100)
 
+        
+
         transaction_request = {
             "destinationAccountNumber": account,
             "amount": amount
@@ -61,6 +66,8 @@ class BankApiUser(HttpUser):
     def withdraw(self):
         account = random.choice(account_numbers)
         amount = random.uniform(50, 100)
+
+        
 
         transaction_request = {
             "sourceAccountNumber": account,
@@ -75,6 +82,8 @@ class BankApiUser(HttpUser):
         amount = random.uniform(20, 80)
         payee = "Test Payee"
 
+        
+
         transaction_request = {
             "sourceAccountNumber": account,
             "amount": amount,
@@ -88,6 +97,8 @@ class BankApiUser(HttpUser):
         account = random.choice(account_numbers)
         amount = random.uniform(20, 80)
 
+       
+
         transaction_request = {
             "destinationAccountNumber": account,
             "amount": amount
@@ -100,6 +111,8 @@ class BankApiUser(HttpUser):
         account = random.choice(account_numbers)
         amount = random.uniform(1, 10)
 
+        
+
         transaction_request = {
             "sourceAccountNumber": account,
             "amount": amount
@@ -111,6 +124,8 @@ class BankApiUser(HttpUser):
     def interest(self):
         account = random.choice(account_numbers)
         amount = random.uniform(1, 10)
+
+        
 
         transaction_request = {
             "destinationAccountNumber": account,
