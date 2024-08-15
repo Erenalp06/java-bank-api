@@ -40,12 +40,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(configurer -> configurer
-        .requestMatchers(HttpMethod.GET, "/api/v1/transactions/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.POST, "/api/v1/transactions/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.PUT, "/api/v1/transactions/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.DELETE, "/api/v1/transactions/**").hasRole("ADMIN"));
+            .requestMatchers(HttpMethod.GET, "/api/v1/transactions/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.POST, "/api/v1/transactions/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/api/v1/transactions/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/v1/transactions/**").hasRole("ADMIN")
+            .requestMatchers("/api/v1/banks/**").permitAll()
+            .requestMatchers("/api/v1/users/**").permitAll()
+        );
 
         http.httpBasic(Customizer.withDefaults());
         http.csrf(csrf -> csrf.disable());
